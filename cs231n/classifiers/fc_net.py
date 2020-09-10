@@ -345,3 +345,6 @@ class FullyConnectedNet(object):
         ############################################################################
 
         return loss, grads
+
+model = TwoLayerNet()
+print(model.params.keys())
