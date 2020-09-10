@@ -41,7 +41,7 @@ class TwoLayerNet(object):
           initialization of the weights.
         - reg: Scalar giving L2 regularization strength.
         """
-        self.params = {}
+        
         self.reg = reg
 
         ############################################################################
@@ -55,11 +55,11 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        self.params['W1'] = weight_scale * np.random.rand(input_dim, hidden_dim)
-        self.params['W2'] = weight_scale * np.random.rand(hidden_dim, num_classes)
-
-        self.params['b1'] = np.zeros(input_dim)
-        self.params['b2'] = np.zeros(num_classes)
+        
+        self.params = {'W1': weight_scale * np.random.rand(input_dim, hidden_dim),
+                       'W2': weight_scale * np.random.rand(hidden_dim, num_classes),
+                       'b1': np.zeros(input_dim),
+                       'b2': np.zeros(num_classes)}
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -345,6 +345,3 @@ class FullyConnectedNet(object):
         ############################################################################
 
         return loss, grads
-
-model = TwoLayerNet()
-print(model.params.keys())
