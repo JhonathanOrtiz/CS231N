@@ -557,7 +557,7 @@ def conv_forward_naive(x, w, b, conv_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pad = conv_param['pad']
+    pad = conv_param['pad']
     stride = conv_param['stride']
     N, C, H, W = x.shape
     F, C, FH, FW = w.shape
