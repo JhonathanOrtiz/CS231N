@@ -556,36 +556,20 @@ def conv_forward_naive(x, w, b, conv_param):
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pad = conv_param['pad']
-    stride = conv_param['stride']
     N, C, H, W = x.shape
-    F, C, FH, FW = w.shape
-
-    assert (H - FH + 2 * pad) % stride == 0
-    assert (W - FW + 2 * pad) % stride == 0
-    outH = 1 + (H - FH + 2 * pad) / stride
-    outW = 1 + (W - FW + 2 * pad) / stride
-
-    # create output tensor after convolution layer
-    out = np.zeros((N, F, outH, outW))
-
-    # padding all input data
-    x_pad = np.pad(x, ((0,0), (0,0),(pad,pad),(pad,pad)), 'constant')
-    H_pad, W_pad = x_pad.shape[2], x_pad.shape[3]    
-
-    # create w_row matrix
-    w_row = w.reshape(F, C*FH*FW)                            #[F x C*FH*FW]
-
-    # create x_col matrix with values that each neuron is connected to
-    x_col = np.zeros((C*FH*FW, outH*outW))                   #[C*FH*FW x H'*W']
-    for index in range(N):
-        neuron = 0 
-        for i in range(0, H_pad-FH+1, stride):
-            for j in range(0, W_pad-FW+1,stride):
-                x_col[:,neuron] = x_pad[index,:,i:i+FH,j:j+FW].reshape(C*FH*FW)
-                neuron += 1
-        out[index] = (w_row.dot(x_col) + b.reshape(F,1)).reshape(F, outH, outW)
+    F, _, HH, WW = w.shape
+    stride = conv_param['stride']
+    pad = conv_param['pad']
+    H_ = 1 + (H + 2 * pad - HH) // stride
+    W_ = 1 + (W + 2 * pad - WW) // stride
+    out = np.zeros((N, F, H_, W_))
+    x_padded = np.pad(x, ((0,0),(0,0),(pad,pad),(pad,pad)), 'constant')
+    
+    for n in range(N):
+      for f in range(F):
+        for h in range(H_):
+          for i in range(W_):
+            out[n, f, h, i] = np.sum(x_padded[n, :, h*stride:h*stride+HH, i*stride:i*stride+WW] * w[f, ...]) + b[f]
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
