@@ -598,36 +598,28 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    x_pad, w, b, conv_param = cache
-    N, F, outH, outW = dout.shape
-    N, C, Hpad, Wpad = x_pad.shape
-    FH, FW = w.shape[2], w.shape[3]
+    (x, w, b, conv_param) = cache
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
     stride = conv_param['stride']
     pad = conv_param['pad']
-
-    # initialize gradients
-    dx = np.zeros((N, C, Hpad - 2*pad, Wpad - 2*pad))
-    dw, db = np.zeros(w.shape), np.zeros(b.shape)
-
-    # create w_row matrix
-    w_row = w.reshape(F, C*FH*FW)                            #[F x C*FH*FW]
-
-    # create x_col matrix with values that each neuron is connected to
-    x_col = np.zeros((C*FH*FW, outH*outW))                   #[C*FH*FW x H'*W']
-    for index in range(N):
-        out_col = dout[index].reshape(F, outH*outW)          #[F x H'*W']
-        w_out = w_row.T.dot(out_col)                         #[C*FH*FW x H'*W']
-        dx_cur = np.zeros((C, Hpad, Wpad))
-        neuron = 0
-        for i in range(0, Hpad-FH+1, stride):
-            for j in range(0, Wpad-FW+1, stride):
-                dx_cur[:,i:i+FH,j:j+FW] += w_out[:,neuron].reshape(C,FH,FW)
-                x_col[:,neuron] = x_pad[index,:,i:i+FH,j:j+FW].reshape(C*FH*FW)
-                neuron += 1
-        dx[index] = dx_cur[:,pad:-pad, pad:-pad]
-        dw += out_col.dot(x_col.T).reshape(F,C,FH,FW)
-        db += out_col.sum(axis=1)
-
+    H_ = 1 + (H + 2 * pad - HH) // stride
+    W_ = 1 + (W + 2 * pad - WW) // stride
+    x_padded = np.pad(x, ((0,0),(0,0),(pad,pad),(pad,pad)), 'constant')
+    
+    dx_padded = np.zeros_like(x_padded)
+    dw = np.zeros_like(w)
+    db = np.zeros_like(b)
+    
+    for n in range(N):
+      for f in range(F):
+        db[f] += np.sum(dout[n,f])
+        for h in range(H_):
+          for i in range(W_):
+            dw[f] += dout[n, f, h, i]* x_padded[n, :, h*stride:h*stride+HH, i*stride:i*stride+WW]
+            dx_padded[n, :, h*stride:h*stride+HH, i*stride:i*stride+WW] += w[f] * dout[n, f, h, i]
+            
+    dx = dx_padded[..., pad:pad+H, pad:pad+W]
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
